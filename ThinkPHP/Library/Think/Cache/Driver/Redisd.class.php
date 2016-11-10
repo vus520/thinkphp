@@ -61,16 +61,16 @@ class Redisd extends Cache
         );
         
         $options = array_merge($default, $options);
-        
+
         $this->options = $options;
         $this->options ['expire'] = isset($options ['expire']) ? $options ['expire'] : C('DATA_CACHE_TIME');
         $this->options ['prefix'] = isset($options ['prefix']) ? $options ['prefix'] : C('DATA_CACHE_PREFIX');
         $this->options ['length'] = isset($options ['length']) ? $options ['length'] : 0;
         $this->options ['func'] = $options ['persistent'] ? 'pconnect' : 'connect';
-        
+
         $host = explode(",", trim($this->options ['host'], ","));
         $host = array_map("trim", $host);
-        
+
         $this->options ["servers"] = count($host);
         $this->options ["server_master"] = array_shift($host);
         $this->options ["server_master_failover"] = explode(",", trim($this->options ['server_master_failover'], ","));
@@ -161,7 +161,11 @@ class Redisd extends Cache
             E($e->getMessage(), $e->getCode());
         }
 
+        if (strlen($this->options ['prefix'])) {
+            $this->handler->setOption(\Redis::OPT_PREFIX, $this->options ['prefix']);
+        }
         self::$redis_rw_handler[$master] = $this->handler;
+        return $this;
     }
 
     /**
@@ -177,7 +181,7 @@ class Redisd extends Cache
         $this->master(false);
 
         try {
-            $value = $this->handler->get($this->options ['prefix'] . $name);
+            $value = $this->handler->get($name);
         } catch (\RedisException $e) {
             unset(self::$redis_rw_handler[0]);
             $this->master();
@@ -212,8 +216,7 @@ class Redisd extends Cache
         if (is_null($expire )) {
             $expire = $this->options ['expire'];
         }
-        $name = $this->options ['prefix'] . $name;
-        
+
         /**
          * 兼容历史版本
          * Redis不支持存储对象，存入对象会转换成字符串
@@ -222,7 +225,7 @@ class Redisd extends Cache
         $value = (is_object($value) || is_array($value )) ? json_encode($value) : $value;
         
         if ($value === null) {
-            return $this->handler->delete($this->options ['prefix'] . $name);
+            return $this->handler->delete($name);
         }
         
         // $expire < 0 则等于ttl操作，列为todo吧
@@ -266,7 +269,7 @@ class Redisd extends Cache
     {
         N('cache_write', 1);
         $this->master(true);
-        return $this->handler->delete($this->options ['prefix'] . $name);
+        return $this->handler->delete($name);
     }
     
     /**
