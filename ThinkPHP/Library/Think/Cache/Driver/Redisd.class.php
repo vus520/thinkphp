@@ -84,6 +84,7 @@ class Redisd extends Cache
      * 
      * @access public
      * @param bool $master true 默认主写
+     * @return \Redis
      */
     public function master($master = false)
     {
@@ -165,7 +166,7 @@ class Redisd extends Cache
             $this->handler->setOption(\Redis::OPT_PREFIX, $this->options ['prefix']);
         }
         self::$redis_rw_handler[$master] = $this->handler;
-        return $this;
+        return $this->handler;
     }
 
     /**
@@ -251,7 +252,7 @@ class Redisd extends Cache
      * 需要先执行 $redis->master() 连接到 DB
      * 
      * @access public
-     * @return object
+     * @return \Redis
      */
     function handler()
     {
