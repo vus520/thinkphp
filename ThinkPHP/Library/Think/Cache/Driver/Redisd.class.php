@@ -252,7 +252,7 @@ class Redisd extends Cache
      * 需要先执行 $redis->master() 连接到 DB
      * 
      * @access public
-     * @return \Redis
+     *@return \Redis
      */
     function handler()
     {

@@ -63,6 +63,28 @@ class redisTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(2, $result);
     }
 
+    function testMulti()
+    {
+        $cache = \Think\Cache::getInstance('redisd');
+        /**
+         * @return \Redis
+         */
+        $redis = $cache->master(true);
+
+        $key = "multi_test";
+        $hash_list = ["a", "b", "c"];
+
+        $redis->multi(\Redis::PIPELINE);
+        $redis->del($key);
+        foreach ($hash_list as $id) {
+            $result = $redis->hIncrBy($key, $id, 1);
+        }
+        $redis->exec();
+
+        $hash_list = $redis->hgetall($key);
+        $this->assertEquals(1, $hash_list["a"]);
+    }
+
     function testGzcompress()
     {
         $data = 'cat u gzcompress me?';
