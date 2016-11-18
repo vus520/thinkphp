@@ -56,6 +56,11 @@ class redisTest extends PHPUnit_Framework_TestCase
 
         $cache->lpush($key, $key);
         $this->assertEquals($key, $cache->rpop($key));
+
+        $result = $data = $cache->master(true)->lpush($key, $key);
+        $this->assertEquals(1, $result);
+        $result = $cache->master(true)->lpush($key, $key);
+        $this->assertEquals(2, $result);
     }
 
     function testGzcompress()
