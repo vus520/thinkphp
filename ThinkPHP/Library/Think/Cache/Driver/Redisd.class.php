@@ -25,9 +25,10 @@
  */
 
 /**
-    $redis = \Think\Cache::getInstance();
+    $redis = \Think\Cache::getInstance('redisd');
     $redis->master(true);
-    $redis->get($redis->getOptions('prefix').'key');
+    $redis->set('key', 'value');
+    $redis->get('key');
  */
 
 namespace Think\Cache\Driver;
@@ -41,7 +42,7 @@ class Redisd extends Cache
     
     /**
      * 为了在单次php请求中复用redis连接，第一次获取的options会被缓存，第二次使用不同的$options，将会无效
-     * 
+     *
      * @param  array $options 缓存参数，来自于S函数和\Think\Cache::getInstance("redisd", $options);
      * @access public
      */
@@ -252,7 +253,7 @@ class Redisd extends Cache
      * 需要先执行 $redis->master() 连接到 DB
      * 
      * @access public
-     *@return \Redis
+     * @return \Redis
      */
     function handler()
     {
