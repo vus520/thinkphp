@@ -26,3 +26,8 @@ spl_autoload_register(function ($class) {
     }
 
 });
+
+//兼容 PHPUnit 6.1.3
+if (!class_exists("\PHPUnit_Framework_TestCase") && class_exists("\PHPUnit\Framework\TestCase")) {
+    class PHPUnit_Framework_TestCase extends \PHPUnit\Framework\TestCase{}
+}
