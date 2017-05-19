@@ -2,6 +2,8 @@
 
 class redisTest extends PHPUnit_Framework_TestCase
 {
+    protected $data_prefix;
+    
     protected function setUp()
     {
         if (!extension_loaded('redis')) {
@@ -9,6 +11,9 @@ class redisTest extends PHPUnit_Framework_TestCase
                 'redis扩展不可用，跳过测试'
             );
         }
+
+        C('DATA_CACHE_TYPE', 'Redis');
+        C('DATA_CACHE_PREFIX', $this->data_prefix = 'Redis_');
     }
 
     function testSet()
@@ -98,7 +103,13 @@ class redisTest extends PHPUnit_Framework_TestCase
 
     function testModelCache()
     {
-        $mysql = (new \Think\Model('mysql.user'))->find();
+        try {
+            $mysql = (new \Think\Model('mysql.user'))->find();
+        } catch (\Exception $e) {
+            $this->markTestSkipped("mysql连接不可用，跳过测试: ".$e->getMessage());
+            return;
+        }
+        
         $cache = 'phpunit_'.__FUNCTION__;
         S($cache, NULL);
 
@@ -108,5 +119,30 @@ class redisTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals($mysql, $cache1);
         $this->assertEquals($cache1, $cache2);
+    }
+    
+    function testPrefix()
+    {
+        $key = time();
+        S($key, $key);
+        $this->assertEquals($key, S($key));
+        
+        $cache = \Think\Cache::getInstance('redis');
+        $this->assertEquals($key, $cache->get($key));
+        
+        //老的redis驱动不能直接返回原始对象
+        $value = $cache->__call("get", [$this->data_prefix.$key]);
+        $this->assertEquals($key, $value);
+        
+        $cache = \Think\Cache::getInstance('redisd');
+        $this->assertEquals($key, $cache->get($key));
+        
+        //master方法返回带前缀的纯原生redis实例
+        $redis = $cache->master(true);
+        $this->assertEquals($key, $redis->get($key));
+        
+        //handler方法返回不带前缀的纯原生redis实例
+        $redis = $cache->handler();
+        $this->assertEquals($key, $redis->get($this->data_prefix . $key));
     }
 }

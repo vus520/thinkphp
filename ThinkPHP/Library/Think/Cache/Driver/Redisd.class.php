@@ -26,9 +26,16 @@
 
 /**
     $redis = \Think\Cache::getInstance('redisd');
+    
+    //master方法返回带前缀的纯原生redis实例
     $redis->master(true);
     $redis->set('key', 'value');
     $redis->get('key');
+    
+    //handler方法返回不带前缀的纯原生redis实例
+    $handler = $redis->handler();
+    $handler->set('key', 'value');
+    $handler->get('key');
  */
 
 namespace Think\Cache\Driver;
@@ -167,6 +174,8 @@ class Redisd extends Cache
             $this->handler->setOption(\Redis::OPT_PREFIX, $this->options ['prefix']);
         }
         self::$redis_rw_handler[$master] = $this->handler;
+        
+        //master方法返回带前缀的纯原生redis实例
         return $this->handler;
     }
 
@@ -257,6 +266,8 @@ class Redisd extends Cache
      */
     function handler()
     {
+        //handler方法返回不带前缀的纯原生redis实例
+        $this->handler->setOption(\Redis::OPT_PREFIX, "");
         return $this->handler;
     }
     
